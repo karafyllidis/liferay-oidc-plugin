@@ -5,19 +5,17 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.servlet.BaseFilter;
-
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
+import nl.finalist.liferay.oidc.LibFilter.FilterResult;
+import nl.finalist.liferay.oidc.configuration.OpenIDConnectOCDConfiguration;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 
-import nl.finalist.liferay.oidc.LibFilter.FilterResult;
-import nl.finalist.liferay.oidc.configuration.OpenIDConnectOCDConfiguration;
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 @Component(
 		immediate = true,
@@ -72,5 +70,8 @@ public class OpenIDConnectFilter extends BaseFilter {
         }
     }
 
+    public String getAccessToken() {
+        return libFilter.getAccessToken();
+    }
 
 }

@@ -1,18 +1,6 @@
 package nl.finalist.liferay.oidc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.servlet.FilterChain;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.oltu.oauth2.client.OAuthClient;
@@ -25,11 +13,21 @@ import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
 import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 import org.apache.oltu.oauth2.common.message.types.GrantType;
 
+import javax.servlet.FilterChain;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Servlet filter that initiates OpenID Connect logins, and handles the resulting flow, until and including the
  * UserInfo request. It saves the UserInfo in a session attribute, to be examined by an AutoLogin.
  */
-public class LibFilter  {
+public class LibFilter {
 
     public static final String REQ_PARAM_CODE = "code";
     public static final String REQ_PARAM_STATE = "state";
@@ -38,7 +36,12 @@ public class LibFilter  {
      * Property that is used to configure whether to enable OpenID Connect auth
      */
     public static final String PROPKEY_ENABLE_OPEN_IDCONNECT = "openidconnect.enableOpenIDConnect";
-    
+
+    /**
+     * The actual access token
+     */
+    private String accessToken;
+
     public enum FilterResult {
     	CONTINUE_CHAIN, 
     	BREAK_CHAIN;
@@ -162,6 +165,7 @@ public class LibFilter  {
             OpenIdConnectResponse oAuthResponse = oAuthClient.accessToken(tokenRequest, OpenIdConnectResponse.class);
             liferay.trace("Access/id token response: " + oAuthResponse);
             String accessToken = oAuthResponse.getAccessToken();
+            this.accessToken = accessToken;
 
             if (!oAuthResponse.checkId(oidcConfiguration.issuer(), oidcConfiguration.clientId())) {
                 liferay.warn("The token was not valid: " + oAuthResponse.toString());
@@ -195,9 +199,11 @@ public class LibFilter  {
                     .authorizationLocation(oidcConfiguration.authorizationLocation())
                     .setClientId(clientId)
                     .setRedirectURI(getRedirectUri(request))
+                    //.setResponseType("code id_token")
                     .setResponseType("code")
                     .setScope(oidcConfiguration.scope())
                     .setState(generateStateParam(request))
+                    //.setParameter("response_mode", "form_post")
                     .buildQueryMessage();
             liferay.debug("Redirecting to URL: " + oAuthRequest.getLocationUri());
             response.sendRedirect(oAuthRequest.getLocationUri());
@@ -257,6 +263,10 @@ public class LibFilter  {
 		sb.append(anchor);
 
     	return sb.toString() + anchor;
+    }
+
+    public String getAccessToken() {
+        return accessToken;
     }
 
 }

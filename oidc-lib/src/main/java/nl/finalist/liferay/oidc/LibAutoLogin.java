@@ -1,15 +1,14 @@
 package nl.finalist.liferay.oidc;
 
-import java.util.Map;
-import java.util.UUID;
+import nl.finalist.liferay.oidc.providers.UserInfoProvider;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-
-import org.apache.commons.lang3.StringUtils;
-
-import nl.finalist.liferay.oidc.providers.UserInfoProvider;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * AutoLogin for OpenID Connect 1.0
@@ -20,6 +19,7 @@ import nl.finalist.liferay.oidc.providers.UserInfoProvider;
 public class LibAutoLogin {
 
     private final LiferayAdapter liferay;
+    private Map<String, String> userInfo = new HashMap<>();
 
     public LibAutoLogin(LiferayAdapter liferay) {
         this.liferay = liferay;
@@ -37,6 +37,8 @@ public class LibAutoLogin {
         	HttpSession session = request.getSession();
             Map<String, String> userInfo = (Map<String, String>) session.getAttribute(
                     LibFilter.OPENID_CONNECT_SESSION_ATTR);
+
+            this.userInfo = userInfo;
 
             UserInfoProvider provider = ProviderFactory.getOpenIdProvider(oidcConfiguration.providerType());
 
@@ -62,5 +64,9 @@ public class LibAutoLogin {
         }
         
         return userResponse;
+    }
+
+    public Map<String, String> getOpenIdUserInfo() {
+        return userInfo;
     }
 }
